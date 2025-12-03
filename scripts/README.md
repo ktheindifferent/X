@@ -134,6 +134,56 @@ sudo ./scripts/randomx_boost.sh
 
 ---
 
+### optimize_threads.sh
+
+**Purpose**: Automatically find the optimal thread count for your system
+
+**Usage**:
+```bash
+./scripts/optimize_threads.sh [algorithm]
+```
+
+**Examples**:
+```bash
+./scripts/optimize_threads.sh          # Test RandomX (default)
+./scripts/optimize_threads.sh cn/r     # Test CryptoNight
+./scripts/optimize_threads.sh cn-lite  # Test CryptoNight-Lite
+```
+
+**What it does**:
+- Tests multiple thread counts (all threads, physical cores, and variations)
+- Runs 30-second benchmarks for each configuration
+- Measures hashrate for each thread count
+- Identifies optimal configuration balancing performance and thermal limits
+- Generates detailed report with recommendations
+
+**Output**:
+- Console summary with best configuration
+- Detailed markdown report in `thread_optimization_results/`
+- Recommended config.json settings
+
+**Duration**: ~3-5 minutes (5-6 tests × 30 seconds each)
+
+**Supported Platforms**: macOS, Linux
+
+**Example Output**:
+```
+=== Best Configuration ===
+Thread Count: 14
+Hashrate: 15234.5 H/s
+
+✅ Use 14 threads (physical cores only)
+   HyperThreading doesn't help for this algorithm
+```
+
+**When to Use**:
+- After system upgrades or cooling improvements
+- When testing a new algorithm
+- If experiencing thermal throttling
+- To find sweet spot between performance and power consumption
+
+---
+
 ## Build Scripts
 
 ### build_deps.sh

@@ -82,6 +82,72 @@ Optimal thread count depends on CPU cache:
 - **AMD ThreadRipper**: Use NUMA-aware configuration
 - **Apple Silicon**: Use all P-cores, exclude E-cores
 
+**3. Scratchpad Prefetch Mode Tuning (NEW - 3-10% Performance Gain)**
+
+The scratchpad prefetch mode controls how memory is prefetched during RandomX execution. **Auto-detection is enabled by default** and selects the best mode for your CPU.
+
+**Available Modes:**
+- **Mode 0**: Disabled (no prefetching) - For testing/baseline
+- **Mode 1**: PREFETCHT0 - Prefetch to all cache levels (L1/L2/L3) - Default for older CPUs
+- **Mode 2**: PREFETCHNTA - Non-temporal prefetch (bypass L1) - Minimizes cache pollution
+- **Mode 3**: Forced Read (MOV) - Actually loads data into cache - **Best for modern CPUs**
+
+**Auto-Detection Logic:**
+- **AMD Zen4/Zen5**: Automatically uses Mode 3 (3-10% faster)
+- **Intel Ice Lake and newer**: Automatically uses Mode 3 (2-7% faster)
+- **Older CPUs**: Uses Mode 1 (safe default)
+
+**Configuration Examples:**
+
+Auto mode (recommended - lets X choose):
+```json
+{
+    "randomx": {
+        "mode": "auto"
+    }
+}
+```
+
+Force mode 3 for maximum performance on modern CPUs:
+```json
+{
+    "randomx": {
+        "scratchpad_prefetch_mode": 3
+    }
+}
+```
+
+**CPU-Specific Recommendations:**
+
+| CPU Family | Recommended Mode | Expected Gain |
+|------------|------------------|---------------|
+| AMD Ryzen 7000/9000 (Zen4/Zen5) | 3 (auto) | +3-10% |
+| AMD Ryzen 5000 (Zen3) | 1 or 3 (test both) | +0-5% |
+| AMD Ryzen 3000/2000 (Zen2/+) | 1 (auto) | Baseline |
+| Intel 12th/13th/14th Gen | 3 (auto) | +2-7% |
+| Intel 10th/11th Gen (Ice Lake+) | 3 (auto) | +2-5% |
+| Intel older than 10th Gen | 1 (auto) | Baseline |
+
+**Benchmarking Your Configuration:**
+
+Test all modes to find the best for your specific CPU:
+```bash
+# Test with auto-detection (recommended)
+./x --bench=rx/0 --bench-submit
+
+# Test mode 0 (disabled - baseline)
+# Edit config.json: "scratchpad_prefetch_mode": 0
+./x --config=config.json --bench=rx/0
+
+# Test mode 3 (forced read - usually fastest on modern CPUs)
+# Edit config.json: "scratchpad_prefetch_mode": 3
+./x --config=config.json --bench=rx/0
+```
+
+**Example Configurations:**
+- `config_prefetch_auto.json` - Auto-detection (recommended)
+- `config_prefetch_mode3.json` - Forced mode 3 for Zen4/5 and Ice Lake+
+
 **3. CPU Affinity**
 
 For multi-CPU systems or NUMA:

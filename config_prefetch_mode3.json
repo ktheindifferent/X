@@ -1,0 +1,27 @@
+{
+    "autosave": true,
+    "donate-level": 1,
+    "comment": "Optimized for AMD Zen4/Zen5 and Intel Ice Lake+ with mode 3 (forced memory read)",
+    "pools": [
+        {
+            "algo": "rx/0",
+            "url": "pool-global.tari.snipanet.com:3333",
+            "user": "YOUR_TARI_WALLET_ADDRESS",
+            "pass": "x"
+        }
+    ],
+    "randomx": {
+        "init": -1,
+        "init-avx2": -1,
+        "mode": "auto",
+        "1gb-pages": false,
+        "rdmsr": true,
+        "wrmsr": true,
+        "cache_qos": false,
+        "numa": true,
+        "scratchpad_prefetch_mode": 3
+    },
+    "cpu": true,
+    "opencl": false,
+    "cuda": false
+}

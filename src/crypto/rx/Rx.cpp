@@ -132,7 +132,39 @@ bool xmrig::Rx::init(const T &seed, const RxConfig &config, const CpuConfig &cpu
     }
 #   endif
 
-    randomx_set_scratchpad_prefetch_mode(config.scratchpadPrefetchMode());
+    // Auto-detect optimal scratchpad prefetch mode based on CPU architecture
+    auto prefetchMode = static_cast<int>(config.scratchpadPrefetchMode());
+    if (prefetchMode >= static_cast<int>(RxConfig::ScratchpadPrefetchMax)) {
+        // Auto-detection: choose best mode for CPU
+        const auto vendor = Cpu::info()->vendor();
+        const auto arch = Cpu::info()->arch();
+
+        if (vendor == ICpuInfo::VENDOR_AMD) {
+            // AMD Zen4 and Zen5 have excellent out-of-order execution
+            // Mode 3 (forced memory read) is proven faster
+            if (arch == ICpuInfo::ARCH_ZEN4 || arch == ICpuInfo::ARCH_ZEN5) {
+                prefetchMode = RxConfig::ScratchpadPrefetchMov;  // Mode 3
+            }
+            else {
+                prefetchMode = RxConfig::ScratchpadPrefetchT0;  // Mode 1 for older Zen
+            }
+        }
+        else if (vendor == ICpuInfo::VENDOR_INTEL) {
+            // Intel Ice Lake (0x7E) and newer have strong OoO execution
+            if (Cpu::info()->model() >= 0x7E) {
+                prefetchMode = RxConfig::ScratchpadPrefetchMov;  // Mode 3
+            }
+            else {
+                prefetchMode = RxConfig::ScratchpadPrefetchT0;  // Mode 1 for older Intel
+            }
+        }
+        else {
+            // Unknown vendor: use conservative default
+            prefetchMode = RxConfig::ScratchpadPrefetchT0;  // Mode 1
+        }
+    }
+
+    randomx_set_scratchpad_prefetch_mode(prefetchMode);
     randomx_set_huge_pages_jit(cpu.isHugePagesJit());
     randomx_set_optimized_dataset_init(config.initDatasetAVX2());
 

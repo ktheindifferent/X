@@ -225,9 +225,11 @@ namespace randomx {
 
 		hasAVX = xmrig::Cpu::info()->hasAVX();
 		hasAVX2 = xmrig::Cpu::info()->hasAVX2();
+		hasAVX512 = xmrig::Cpu::info()->hasAVX512();
 
 		// Disable by default
 		initDatasetAVX2 = false;
+		initDatasetAVX512 = false;
 
 		if (optimizedInitDatasetEnable) {
 			// Dataset init using AVX2:
@@ -280,9 +282,35 @@ namespace randomx {
 			initDatasetAVX2 = false;
 		}
 
+		// AVX-512 initialization logic
+		if (optimizedInitDatasetEnable && hasAVX512) {
+			xmrig::ICpuInfo::Vendor vendor = xmrig::Cpu::info()->vendor();
+			xmrig::ICpuInfo::Arch arch = xmrig::Cpu::info()->arch();
+
+			// AVX-512 is currently only beneficial on specific CPUs
+			// TODO: Add AVX-512 assembly implementation before enabling
+			if (vendor == xmrig::ICpuInfo::VENDOR_INTEL) {
+				// Intel CPUs with AVX-512 (Skylake-X, Ice Lake, etc.)
+				// For now, keep disabled until AVX-512 assembly is implemented
+				initDatasetAVX512 = false;
+			}
+			else if (vendor == xmrig::ICpuInfo::VENDOR_AMD) {
+				// AMD Zen4 and Zen5 have AVX-512 support
+				if (arch == xmrig::ICpuInfo::ARCH_ZEN4 || arch == xmrig::ICpuInfo::ARCH_ZEN5) {
+					// For now, keep disabled until AVX-512 assembly is implemented
+					initDatasetAVX512 = false;
+				}
+			}
+
+			// If AVX-512 is enabled, disable AVX2 (use the more advanced option)
+			if (initDatasetAVX512) {
+				initDatasetAVX2 = false;
+			}
+		}
+
 		hasXOP = xmrig::Cpu::info()->hasXOP();
 
-		allocatedSize = initDatasetAVX2 ? (CodeSize * 4) : (CodeSize * 2);
+		allocatedSize = initDatasetAVX512 ? (CodeSize * 6) : (initDatasetAVX2 ? (CodeSize * 4) : (CodeSize * 2));
 		allocatedCode = static_cast<uint8_t*>(allocExecutableMemory(allocatedSize,
 #			ifdef XMRIG_SECURE_JIT
 			false

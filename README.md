@@ -144,6 +144,11 @@ The donation level can be adjusted in the config file with the `donate-level` op
   - CPU/GPU mining optimization
   - Algorithm-specific tips (RandomX, KawPow, CryptoNight, GhostRider)
   - Benchmarking and troubleshooting
+- **[ALGORITHM_PERFORMANCE_ANALYSIS.md](ALGORITHM_PERFORMANCE_ANALYSIS.md)** - Real profiling results
+  - Actual performance analysis from Intel i9-9880H
+  - RandomX, CryptoNight, and CryptoNight-Lite comparison
+  - Algorithm recommendations and optimization priorities
+  - System-specific optimization opportunities (5-20% potential gains)
 - **[docs/PROFILING.md](docs/PROFILING.md)** - Performance profiling guide
   - Profiling tools and techniques (macOS, Linux, Windows)
   - CPU and GPU profiling methodologies
@@ -163,6 +168,11 @@ The donation level can be adjusted in the config file with the `donate-level` op
 ### Developer Documentation
 - **[claude.md](claude.md)** - Project overview and current status
 - **[todo.md](todo.md)** - Complete development roadmap (10 phases)
+- **[PHASE2_SUMMARY.md](PHASE2_SUMMARY.md)** - Phase 2 achievements summary
+  - Complete inventory of 7,800+ lines of technical documentation
+  - 50 optimization opportunities cataloged and prioritized
+  - Runtime profiling results and validation
+  - Key learnings and next steps (Phase 2: 80% complete)
 - **[docs/CODE_QUALITY_ANALYSIS.md](docs/CODE_QUALITY_ANALYSIS.md)** - Code quality analysis and recommendations
   - Compiler warning analysis
   - Code quality metrics

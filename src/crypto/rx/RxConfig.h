@@ -113,7 +113,7 @@ private:
     int m_initDatasetAVX2 = -1;
     Mode m_mode           = AutoMode;
 
-    ScratchpadPrefetchMode m_scratchpadPrefetchMode = ScratchpadPrefetchT0;
+    ScratchpadPrefetchMode m_scratchpadPrefetchMode = ScratchpadPrefetchMax;  // Auto-detect by default
 
 #   ifdef XMRIG_FEATURE_HWLOC
     bool m_numa           = true;

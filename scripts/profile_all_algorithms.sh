@@ -33,17 +33,19 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 REPORT="$RESULTS_DIR/algorithm_comparison_${TIMESTAMP}.md"
 
 # Algorithms to test (CPU-only, no GPU algorithms)
-declare -A ALGORITHMS
-ALGORITHMS[randomx]="10M"
-ALGORITHMS[cn]="1M"
-ALGORITHMS[cn-lite]="1M"
+# Format: "algorithm:benchmark_size"
+ALGORITHMS=(
+    "randomx:10M"
+    "cn:1M"
+    "cn-lite:1M"
+)
 
 DURATION=45  # Profile duration in seconds
 
 echo -e "${GREEN}Configuration:${NC}"
 echo "  Binary: $BINARY"
 echo "  Duration: ${DURATION}s per algorithm"
-echo "  Algorithms: ${!ALGORITHMS[@]}"
+echo "  Algorithms: randomx, cn, cn-lite"
 echo "  Report: $REPORT"
 echo
 
@@ -67,8 +69,10 @@ This report compares the performance characteristics of different mining algorit
 EOF
 
 # Profile each algorithm
-for algo in "${!ALGORITHMS[@]}"; do
-    bench_size="${ALGORITHMS[$algo]}"
+for algo_spec in "${ALGORITHMS[@]}"; do
+    # Split algorithm:benchmark_size
+    algo="${algo_spec%%:*}"
+    bench_size="${algo_spec##*:}"
 
     echo
     echo -e "${BLUE}=== Profiling $algo algorithm ===${NC}"
@@ -220,7 +224,8 @@ cat >> "$REPORT" <<EOF
 EOF
 
 # Extract all hashrates for comparison
-for algo in "${!ALGORITHMS[@]}"; do
+for algo_spec in "${ALGORITHMS[@]}"; do
+    algo="${algo_spec%%:*}"
     OUTPUT_PREFIX="$RESULTS_DIR/profile_${algo}_${TIMESTAMP}"
     if [ -f "$OUTPUT_PREFIX.stdout.txt" ]; then
         HASHRATE=$(grep -i "speed" "$OUTPUT_PREFIX.stdout.txt" | tail -1 || echo "N/A")
@@ -268,7 +273,8 @@ All profiling data saved to: \`$RESULTS_DIR/\`
 
 EOF
 
-for algo in "${!ALGORITHMS[@]}"; do
+for algo_spec in "${ALGORITHMS[@]}"; do
+    algo="${algo_spec%%:*}"
     cat >> "$REPORT" <<EOF
 **$algo:**
 - \`profile_${algo}_${TIMESTAMP}.sample.txt\` - CPU sampling data
