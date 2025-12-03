@@ -26,7 +26,7 @@
 #include <cstdio>
 
 
-xmrig::ConsoleLog::ConsoleLog(const Title &title)
+xmrig::ConsoleLog::ConsoleLog([[maybe_unused]] const Title &title)
 {
     if (!isSupported()) {
         Log::setColors(false);
@@ -67,7 +67,7 @@ xmrig::ConsoleLog::~ConsoleLog()
 }
 
 
-void xmrig::ConsoleLog::print(uint64_t, int, const char *line, size_t, size_t size, bool colors)
+void xmrig::ConsoleLog::print(uint64_t, int, const char *line, size_t, [[maybe_unused]] size_t size, bool colors)
 {
     if (!m_tty || Log::isColors() != colors) {
         return;

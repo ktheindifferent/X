@@ -29,7 +29,7 @@ namespace xmrig {
 class HttpListener : public IHttpListener
 {
 public:
-    inline HttpListener(IHttpListener *listener, const char *tag = nullptr) :
+    inline HttpListener(IHttpListener *listener, [[maybe_unused]] const char *tag = nullptr) :
 #       ifdef APP_DEBUG
         m_tag(tag),
 #       endif
