@@ -40,5 +40,17 @@
 constexpr const int kDefaultDonateLevel = 1;
 constexpr const int kMinimumDonateLevel = 1;
 
+/*
+ * Donation test mode for debugging
+ *
+ * Uncomment the line below to enable fast donation testing:
+ * - First donation: 1-2 minutes instead of 49.5-148.5 minutes
+ * - Donation duration: 30 seconds instead of 1 minute
+ * - Idle time: 2-3 minutes instead of 79-119 minutes
+ *
+ * This makes it easy to verify donation system is working without waiting hours.
+ */
+// #define DONATION_TEST_MODE
+
 
 #endif // XMRIG_DONATE_H

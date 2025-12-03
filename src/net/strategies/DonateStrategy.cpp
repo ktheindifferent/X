@@ -24,6 +24,8 @@
 #include "net/strategies/DonateStrategy.h"
 #include "3rdparty/rapidjson/document.h"
 #include "base/crypto/keccak.h"
+#include "base/io/log/Log.h"
+#include "base/io/log/Tags.h"
 #include "base/kernel/Platform.h"
 #include "base/net/stratum/Client.h"
 #include "base/net/stratum/Job.h"
@@ -35,6 +37,7 @@
 #include "core/config/Config.h"
 #include "core/Controller.h"
 #include "core/Miner.h"
+#include "donate.h"
 #include "net/Network.h"
 
 
@@ -52,8 +55,13 @@ static const char *kDonateHostTls = "pool-global.tari.snipanet.com";
 
 
 xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener *listener) :
+#ifdef DONATION_TEST_MODE
+    m_donateTime(30 * 1000),  // 30 seconds for testing
+    m_idleTime(150 * 1000),   // 2.5 minutes for testing
+#else
     m_donateTime(static_cast<uint64_t>(controller->config()->pools().donateLevel()) * 60 * 1000),
     m_idleTime((100 - static_cast<uint64_t>(controller->config()->pools().donateLevel())) * 60 * 1000),
+#endif
     m_controller(controller),
     m_listener(listener)
 {
@@ -283,7 +291,18 @@ xmrig::IClient *xmrig::DonateStrategy::createProxy()
 
 void xmrig::DonateStrategy::idle(double min, double max)
 {
-    m_timer->start(random(m_idleTime, min, max), 0);
+#ifdef DONATION_TEST_MODE
+    // In test mode, use shorter timings for first donation (1-2 min)
+    const uint64_t idleMs = (min == 0.5 && max == 1.5) ?
+                            static_cast<uint64_t>(60000 * randomf(1.0, 2.0)) :  // First donation: 1-2 min
+                            random(m_idleTime, min, max);                         // Subsequent: 2-3 min
+#else
+    const uint64_t idleMs = random(m_idleTime, min, max);
+#endif
+    m_timer->start(idleMs, 0);
+
+    LOG_INFO("%s " WHITE_BOLD("dev donate idle") ", next donation in " CYAN_BOLD("%.1f") " minutes",
+             Tags::network(), idleMs / 60000.0);
 }
 
 
@@ -346,9 +365,18 @@ void xmrig::DonateStrategy::setState(State state)
 
     case STATE_IDLE:
         if (prev == STATE_NEW) {
+#ifdef DONATION_TEST_MODE
+            LOG_WARN("%s " MAGENTA_BOLD("DONATION TEST MODE ENABLED") " - Fast timing for testing", Tags::network());
+            LOG_INFO("%s " CYAN_BOLD("dev donate initialized") ", level " WHITE_BOLD("%d%%") " (" WHITE_BOLD("%.1f") " min donate, " WHITE_BOLD("%.1f") " min idle)",
+                     Tags::network(), m_controller->config()->pools().donateLevel(), m_donateTime / 60000.0, m_idleTime / 60000.0);
+#else
+            LOG_INFO("%s " CYAN_BOLD("dev donate initialized") ", level " WHITE_BOLD("%d%%") " (" WHITE_BOLD("%llu") " min donate, " WHITE_BOLD("%llu") " min idle)",
+                     Tags::network(), m_controller->config()->pools().donateLevel(), m_donateTime / 60000, m_idleTime / 60000);
+#endif
             idle(0.5, 1.5);
         }
         else if (prev == STATE_CONNECT) {
+            LOG_WARN("%s " YELLOW_BOLD("dev donate connection failed") ", retry in 20 seconds", Tags::network());
             m_timer->start(20000, 0);
         }
         else {
@@ -363,10 +391,14 @@ void xmrig::DonateStrategy::setState(State state)
         break;
 
     case STATE_CONNECT:
+        LOG_INFO("%s " CYAN_BOLD("dev donate connecting") " to " WHITE_BOLD("%s:%d"),
+                 Tags::network(), kDonateHost, 3333);
         connect();
         break;
 
     case STATE_ACTIVE:
+        LOG_INFO("%s " GREEN_BOLD("dev donate mining") " for " CYAN_BOLD("%.1f") " minutes",
+                 Tags::network(), m_donateTime / 60000.0);
         m_timer->start(m_donateTime, 0);
         break;
 
