@@ -4,3 +4,11 @@ scripts/deps
 /CMakeLists.txt.user
 /.idea
 /src/backend/opencl/cl/cn/cryptonight_gen.cl
+
+# Profiling and benchmarking results
+/profiling_results/
+/thread_optimization_results/
+/benchmark_results/
+
+# Session summaries (generated documentation)
+SESSION_SUMMARY*.md

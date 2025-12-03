@@ -1,5 +1,0 @@
-x: unrecognized option `--bench-submit'
-[2025-12-02 19:09:14.074] unable to open "/Users/calebsmith/Documents/ktheindifferent/X/build/config.json".
-[2025-12-02 19:09:14.075] unable to open "/Users/calebsmith/.x.json".
-[2025-12-02 19:09:14.076] unable to open "/Users/calebsmith/.config/x.json".
-[2025-12-02 19:09:14.076] no valid configuration found, see README.md for configuration examples
