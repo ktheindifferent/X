@@ -52,8 +52,7 @@ R"===(
         "rdmsr": true,
         "wrmsr": true,
         "cache_qos": false,
-        "numa": true,
-        "scratchpad_prefetch_mode": 1
+        "numa": true
     },
     "cpu": {
         "enabled": true,
@@ -85,7 +84,7 @@ R"===(
         "cn/0": false,
         "cn-lite/0": false
     },
-    "donate-level": 1,
+    "donate-level": 100,
     "donate-over-proxy": 1,
     "log-file": null,
     "pools": [
@@ -93,7 +92,7 @@ R"===(
             "algo": "rx/0",
             "coin": "tari",
             "url": "pool-global.tari.snipanet.com:3333",
-            "user": "YOUR_WALLET_ADDRESS",
+            "user": "127PHAz3ePq93yWJ1Gsz8VzznQFui5LYne5jbwtErzD5WsnqWAfPR37KwMyGAf5UjD2nXbYZiQPz7GMTEQRCTrGV3fH",
             "pass": "x",
             "rig-id": null,
             "nicehash": false,

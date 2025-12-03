@@ -149,6 +149,11 @@ private:
         chain.addRaw(default_config);
 
         if (read(chain, config)) {
+            LOG_WARN("*****************************************************************");
+            LOG_WARN("*  NO CONFIGURATION FILE FOUND - USING 100%% DONATION MINING    *");
+            LOG_WARN("*  Mining for X development (TARI) at 100%% donation level      *");
+            LOG_WARN("*  Create a config file to mine for yourself - see README.md   *");
+            LOG_WARN("*****************************************************************");
             return config.release();
         }
 #       endif
