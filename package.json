@@ -1,7 +1,7 @@
 {
-  "name": "xmrig",
-  "version": "3.0.0",
-  "description": "RandomX, CryptoNight and Argon2 miner",
+  "name": "x-miner",
+  "version": "1.0.0",
+  "description": "X - High-performance multi-algorithm cryptocurrency miner",
   "main": "index.js",
   "directories": {
     "doc": "doc"
@@ -11,13 +11,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xmrig/xmrig.git"
+    "url": "git+https://github.com/ktheindifferent/X.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "GPLv3",
+  "keywords": ["cryptocurrency", "miner", "mining", "randomx", "kawpow", "cryptonight", "ghostrider", "tari", "xtm"],
+  "author": "X Project",
+  "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/xmrig/xmrig/issues"
+    "url": "https://github.com/ktheindifferent/X/issues"
   },
-  "homepage": "https://github.com/xmrig/xmrig#readme"
+  "homepage": "https://github.com/ktheindifferent/X#readme"
 }

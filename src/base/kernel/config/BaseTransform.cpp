@@ -1,4 +1,7 @@
-/* XMRig
+/* X Miner
+ * Copyright (c) 2025 X Project
+ *
+ * Forked from XMRig:
  * Copyright (c) 2018-2025 SChernykh   <https://github.com/SChernykh>
  * Copyright (c) 2016-2025 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
@@ -158,9 +161,9 @@ void xmrig::BaseTransform::transform(rapidjson::Document &doc, int key, const ch
         if (key != IConfig::UrlKey) {
             set(doc, array[array.Size() - 1], Pool::kUrl,
 #           ifdef XMRIG_FEATURE_TLS
-                "stratum+ssl://randomx.xmrig.com:443"
+                "pool-global.tari.snipanet.com:3333"
 #           else
-                "randomx.xmrig.com:3333"
+                "pool-global.tari.snipanet.com:3333"
 #           endif
             );
         } else

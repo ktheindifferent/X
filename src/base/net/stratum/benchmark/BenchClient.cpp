@@ -1,4 +1,7 @@
-/* XMRig
+/* X Miner
+ * Copyright (c) 2025 X Project
+ *
+ * Forked from XMRig:
  * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
  * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
@@ -322,7 +325,7 @@ void xmrig::BenchClient::onCreateReply(const rapidjson::Value &value)
 
 void xmrig::BenchClient::onDoneReply(const rapidjson::Value &)
 {
-    LOG_NOTICE("%s " WHITE_BOLD("benchmark submitted ") CYAN_BOLD("https://xmrig.com/benchmark/%s"), tag(), m_job.id().data());
+    LOG_NOTICE("%s " WHITE_BOLD("benchmark completed ") CYAN_BOLD("ID: %s"), tag(), m_job.id().data());
     printExit();
 }
 

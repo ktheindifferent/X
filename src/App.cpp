@@ -1,4 +1,7 @@
-/* XMRig
+/* X Miner
+ * Copyright 2025 X Project
+ *
+ * Forked from XMRig:
  * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
  * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
  * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
@@ -55,7 +58,7 @@ xmrig::App::~App()
 int xmrig::App::exec()
 {
     if (!m_controller->isReady()) {
-        LOG_EMERG("no valid configuration found, try https://xmrig.com/wizard");
+        LOG_EMERG("no valid configuration found, see README.md for configuration examples");
 
         return 2;
     }

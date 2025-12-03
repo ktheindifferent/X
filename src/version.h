@@ -1,4 +1,7 @@
-/* XMRig
+/* X Miner
+ * Copyright (c) 2025 X Project
+ *
+ * Forked from XMRig:
  * Copyright (c) 2018-2025 SChernykh   <https://github.com/SChernykh>
  * Copyright (c) 2016-2025 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
@@ -19,17 +22,17 @@
 #ifndef XMRIG_VERSION_H
 #define XMRIG_VERSION_H
 
-#define APP_ID        "xmrig"
-#define APP_NAME      "XMRig"
-#define APP_DESC      "XMRig miner"
-#define APP_VERSION   "6.24.0"
-#define APP_DOMAIN    "xmrig.com"
-#define APP_SITE      "www.xmrig.com"
-#define APP_COPYRIGHT "Copyright (C) 2016-2025 xmrig.com"
+#define APP_ID        "x"
+#define APP_NAME      "X"
+#define APP_DESC      "X miner"
+#define APP_VERSION   "1.0.0"
+#define APP_DOMAIN    "x-miner.dev"
+#define APP_SITE      "www.x-miner.dev"
+#define APP_COPYRIGHT "Copyright (C) 2025 X Project"
 #define APP_KIND      "miner"
 
-#define APP_VER_MAJOR  6
-#define APP_VER_MINOR  24
+#define APP_VER_MAJOR  1
+#define APP_VER_MINOR  0
 #define APP_VER_PATCH  0
 
 #ifdef _MSC_VER

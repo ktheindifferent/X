@@ -94,7 +94,7 @@ private:
     Algorithm m_algorithm;
     bool m_tls                      = false;
     Buffer m_seed;
-    char m_userId[65]               = { 0 };
+    char m_userId[128]              = { 0 };
     const uint64_t m_donateTime;
     const uint64_t m_idleTime;
     Controller *m_controller;

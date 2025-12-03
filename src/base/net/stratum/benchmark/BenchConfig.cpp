@@ -1,4 +1,7 @@
-/* XMRig
+/* X Miner
+ * Copyright (c) 2025 X Project
+ *
+ * Forked from XMRig:
  * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
  * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
@@ -46,7 +49,7 @@ const char *BenchConfig::kUser      = "user";
 const char *BenchConfig::kVerify    = "verify";
 
 #ifndef XMRIG_DEBUG_BENCHMARK_API
-const char *BenchConfig::kApiHost   = "api.xmrig.com";
+const char *BenchConfig::kApiHost   = ""; // X miner does not have a benchmark API server yet
 #else
 const char *BenchConfig::kApiHost   = "127.0.0.1";
 #endif

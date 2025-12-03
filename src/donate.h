@@ -23,7 +23,7 @@
 /*
  * Dev donation.
  *
- * Percentage of your hashing power that you want to donate to the developer can be 0% but supports XMRig Development.
+ * Percentage of your hashing power that you want to donate to the developer, supporting X Development.
  *
  * Example of how it works for the setting of 1%:
  * Your miner will mine into your usual pool for a random time (in a range from 49.5 to 148.5 minutes),
@@ -34,8 +34,8 @@
  *
  * Switching is instant and only happens after a successful connection, so you never lose any hashes.
  *
- * If you plan on changing donations to 0%, please consider making a one-off donation to my wallet:
- * XMR: 48edfHu7V9Z84YzzMa6fUueoELZ9ZRXq9VetWzYGzKt52XU5xvqgzYnDK9URnRoJMk1j8nLwEVsaSWJ4fhdUyZijBGUicoD
+ * Developer TARI/XTM donation wallet:
+ * 127PHAz3ePq93yWJ1Gsz8VzznQFui5LYne5jbwtErzD5WsnqWAfPR37KwMyGAf5UjD2nXbYZiQPz7GMTEQRCTrGV3fH
  */
 constexpr const int kDefaultDonateLevel = 1;
 constexpr const int kMinimumDonateLevel = 1;

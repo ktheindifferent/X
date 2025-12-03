@@ -1,0 +1,53 @@
+X Miner Profiling Summary
+========================
+
+Date: Tue Dec  2 21:12:33 EST 2025
+Algorithm: rx/0
+Duration: 30s
+Binary: /Users/calebsmith/Documents/ktheindifferent/X/build/x
+
+Hashrate:
+
+
+CPU/Memory Stats:
+ %CPU %MEM    RSS      VSZ      TIME
+1410.2  7.3 2433432 37657980   3:51.76
+
+Top Functions (from sample):
+Call graph:
+    6557 Thread_1300576   DispatchQueue_1: com.apple.main-thread  (serial)
+    + 6557 start  (in dyld) + 3457  [0x7ff808443781]
+    +   6557 ???  (in x)  load address 0x10dd1f000 + 0xcb908  [0x10ddea908]
+    +     6557 ???  (in x)  load address 0x10dd1f000 + 0xbe2c0  [0x10dddd2c0]
+    +       6557 ???  (in x)  load address 0x10dd1f000 + 0x4e7865  [0x10e206865]
+    +         6550 ???  (in x)  load address 0x10dd1f000 + 0x4f7b69  [0x10e216b69]
+    +         ! 6550 kevent  (in libsystem_kernel.dylib) + 10  [0x7ff8087db806]
+    +         7 ???  (in x)  load address 0x10dd1f000 + 0x4f7d26  [0x10e216d26]
+    +           7 ???  (in x)  load address 0x10dd1f000 + 0x4e7408  [0x10e206408]
+    +             7 ???  (in x)  load address 0x10dd1f000 + 0xc585c  [0x10dde485c]
+    +               7 ???  (in x)  load address 0x10dd1f000 + 0x8c026  [0x10ddab026]
+    +                 7 xmrig::Workers<xmrig::CpuLaunchData>::start(std::vector<xmrig::CpuLaunchData> const&, std::shared_ptr<xmrig::Benchmark> const&)  (in x) + 29  [0x10dda6f2d]
+    +                   7 xmrig::Workers<xmrig::CpuLaunchData>::start(std::vector<xmrig::CpuLaunchData> const&, bool)  (in x) + 621  [0x10dda6b6d]
+    +                     5 _pthread_create  (in libsystem_pthread.dylib) + 358  [0x7ff80881ab50]
+    +                     : 5 mach_vm_map  (in libsystem_kernel.dylib) + 86  [0x7ff8087d6900]
+    +                     :   5 _kernelrpc_mach_vm_map_trap  (in libsystem_kernel.dylib) + 10  [0x7ff8087d69e6]
+    +                     1 _pthread_create  (in libsystem_pthread.dylib) + 537  [0x7ff80881ac03]
+    +                     : 1 mach_vm_protect  (in libsystem_kernel.dylib) + 34  [0x7ff8087d9b05]
+    +                     :   1 _kernelrpc_mach_vm_protect_trap  (in libsystem_kernel.dylib) + 10  [0x7ff8087d69da]
+    +                     1 _pthread_create  (in libsystem_pthread.dylib) + 580  [0x7ff80881ac2e]
+    6557 Thread_1300578
+    + 6557 thread_start  (in libsystem_pthread.dylib) + 15  [0x7ff808815857]
+    +   6557 _pthread_start  (in libsystem_pthread.dylib) + 115  [0x7ff808819e4d]
+    +     6557 ???  (in x)  load address 0x10dd1f000 + 0x19f813  [0x10debe813]
+    +       6318 ???  (in x)  load address 0x10dd1f000 + 0x19ea4b  [0x10debda4b]
+    +       ! 6318 std::condition_variable::wait(std::unique_lock<std::mutex>&)  (in libc++.1.dylib) + 18  [0x7ff8087561ae]
+    +       !   6318 _pthread_cond_wait  (in libsystem_pthread.dylib) + 988  [0x7ff80881a2f6]
+    +       !     6318 __psynch_cvwait  (in libsystem_kernel.dylib) + 10  [0x7ff8087d96fa]
+    +       239 ???  (in x)  load address 0x10dd1f000 + 0x19ec6a  [0x10debdc6a]
+    +         239 ???  (in x)  load address 0x10dd1f000 + 0x19c9ef  [0x10debb9ef]
+
+Files:
+- sample.txt: CPU sampling data
+- stdout.txt: Complete miner output
+- stats.txt: Resource usage statistics
+- summary.txt: This summary

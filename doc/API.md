@@ -2,7 +2,7 @@
 
 If you want use HTTP API you need enable it (`"enabled": true,`) then choice `port` and optionaly `host`. API not available if miner built without HTTP support (`-DWITH_HTTP=OFF`).
 
-Offical HTTP client for API: http://workers.xmrig.info/
+Note: X miner inherits the full HTTP API from XMRig but does not currently have an official web-based management interface.
 
 Example configuration:
 
@@ -33,7 +33,7 @@ Example configuration:
 
 If you prefer use command line options instead of config file, you can use options: `--api-id`, `--api-worker-id`, `--http-enabled`, `--http-host`, `--http-access-token`, `--http-port`, `--http-no-restricted`.
 
-Versions before 2.15 was use another options for API https://github.com/xmrig/xmrig/issues/1007
+API compatibility note: This API is compatible with XMRig API (versions 2.15+)
 
 ## Endpoints
 
