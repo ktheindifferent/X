@@ -44,6 +44,15 @@ extern "C" {
 #include "base/tools/Cvt.h"
 #endif
 
+#if defined(XMRIG_ALGO_VERTHASH) && !defined(XMRIG_ALGO_GHOSTRIDER)
+#include <cmath>
+#include "base/tools/Cvt.h"
+
+extern "C" {
+#include "crypto/ghostrider/sph_sha2.h"
+}
+#endif
+
 
 
 xmrig::EthStratumClient::EthStratumClient(int id, const char *agent, IClientListener *listener) :
@@ -76,13 +85,22 @@ int64_t xmrig::EthStratumClient::submit(const JobResult& result)
     params.PushBack(m_user.toJSON(), allocator);
     params.PushBack(result.jobId.toJSON(), allocator);
 
-#   ifdef XMRIG_ALGO_GHOSTRIDER
-    if (m_pool.algorithm().id() == Algorithm::GHOSTRIDER_RTM) {
+#   if defined(XMRIG_ALGO_GHOSTRIDER) || defined(XMRIG_ALGO_VERTHASH)
+    if (m_pool.algorithm().id() == Algorithm::GHOSTRIDER_RTM || m_pool.algorithm().family() == Algorithm::VERTHASH) {
         params.PushBack(Value("00000000000000000000000000000000", static_cast<uint32_t>(m_extraNonce2Size * 2)), allocator);
         params.PushBack(Value(m_ntime.data(), allocator), allocator);
 
+        // Submit nonce in native (little-endian) hex format
+        // Testing showed LE nonce submission with full 80-byte swap gets ~5% acceptance
+        // BE nonce submission (matching cpuminer-opt/VerthashMiner) gets 0% acceptance
+        // The issue is likely NOT in nonce format but in the Verthash algorithm itself
+        uint32_t nonce_val = static_cast<uint32_t>(result.nonce);
+        const uint8_t* nonce_bytes = reinterpret_cast<const uint8_t*>(&nonce_val);
         std::stringstream s;
-        s << std::hex << std::setw(8) << std::setfill('0') << result.nonce;
+        // Output bytes in native order (LE on x86) - low byte first
+        for (int i = 0; i < 4; i++) {
+            s << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(nonce_bytes[i]);
+        }
         params.PushBack(Value(s.str().c_str(), allocator), allocator);
     }
     else
@@ -113,8 +131,8 @@ int64_t xmrig::EthStratumClient::submit(const JobResult& result)
 
     uint64_t actual_diff;
 
-#   ifdef XMRIG_ALGO_GHOSTRIDER
-    if (result.algorithm == Algorithm::GHOSTRIDER_RTM) {
+#   if defined(XMRIG_ALGO_GHOSTRIDER) || defined(XMRIG_ALGO_VERTHASH)
+    if (result.algorithm == Algorithm::GHOSTRIDER_RTM || result.algorithm.family() == Algorithm::VERTHASH) {
         actual_diff = reinterpret_cast<const uint64_t*>(result.result())[3];
     }
     else
@@ -195,14 +213,14 @@ void xmrig::EthStratumClient::parseNotification(const char *method, const rapidj
         setExtraNonce(arr[0]);
     }
 
-#   ifdef XMRIG_ALGO_GHOSTRIDER
+#   if defined(XMRIG_ALGO_GHOSTRIDER) || defined(XMRIG_ALGO_VERTHASH)
     if (strcmp(method, "mining.set_difficulty") == 0) {
         if (!params.IsArray()) {
             LOG_ERR("%s " RED("invalid mining.set_difficulty notification: params is not an array"), tag());
             return;
         }
 
-        if (m_pool.algorithm().id() != Algorithm::GHOSTRIDER_RTM) {
+        if (m_pool.algorithm().id() != Algorithm::GHOSTRIDER_RTM && m_pool.algorithm().family() != Algorithm::VERTHASH) {
             return;
         }
 
@@ -219,9 +237,17 @@ void xmrig::EthStratumClient::parseNotification(const char *method, const rapidj
         }
 
         const double diff = arr[0].IsDouble() ? arr[0].GetDouble() : arr[0].GetUint64();
-        m_nextDifficulty = static_cast<uint64_t>(ceil(diff * 65536.0));
+        // GhostRider uses 65536 multiplier, Verthash divides by 256 (matching cpuminer-opt opt_target_factor)
+        if (m_pool.algorithm().family() == Algorithm::VERTHASH) {
+            // For Verthash: target_diff = stratum_diff / 256 (per cpuminer-opt)
+            m_nextDifficulty = static_cast<uint64_t>(ceil(diff / 256.0));
+            if (m_nextDifficulty == 0) m_nextDifficulty = 1; // Prevent division by zero
+        } else {
+            m_nextDifficulty = static_cast<uint64_t>(ceil(diff * 65536.0));
+        }
+        LOG_DEBUG("[%s] mining.set_difficulty: %f -> m_nextDifficulty=%lu", url(), diff, m_nextDifficulty);
     }
-#   endif
+#   endif  // XMRIG_ALGO_GHOSTRIDER || XMRIG_ALGO_VERTHASH
 
     if (strcmp(method, "mining.notify") == 0) {
         if (!params.IsArray()) {
@@ -236,7 +262,7 @@ void xmrig::EthStratumClient::parseNotification(const char *method, const rapidj
             algo = m_pool.coin().algorithm();
         }
 
-        const size_t min_arr_size = (algo.id() == Algorithm::GHOSTRIDER_RTM) ? 8 : 6;
+        const size_t min_arr_size = (algo.id() == Algorithm::GHOSTRIDER_RTM || algo.family() == Algorithm::VERTHASH) ? 8 : 6;
 
         if (arr.Size() < min_arr_size) {
             LOG_ERR("%s " RED("invalid mining.notify notification: params array has wrong size"), tag());
@@ -347,6 +373,118 @@ void xmrig::EthStratumClient::parseNotification(const char *method, const rapidj
                 if ((i < 36) || (i >= 68)) {
                     k = ethash_swap_u32(k);
                 }
+            }
+            blob = Cvt::toHex(buf.data(), buf.size());
+
+            job.setBlob(blob.c_str());
+            job.setDiff(m_nextDifficulty);
+        }
+        else
+#       endif
+#       ifdef XMRIG_ALGO_VERTHASH
+        if (algo.family() == Algorithm::VERTHASH) {
+            // Vertcoin uses Bitcoin's Stratum protocol
+            // https://en.bitcoinwiki.org/wiki/Stratum_mining_protocol#mining.notify
+            // Per stratum spec, prevhash is byte-swapped within each 4-byte word
+
+            if (!arr[1].IsString() || !arr[2].IsString() || !arr[3].IsString() || !arr[4].IsArray() || !arr[5].IsString() || !arr[6].IsString() || !arr[7].IsString()) {
+                LOG_ERR("%s " RED("invalid mining.notify notification: invalid param array"), tag());
+                return;
+            }
+
+            // Version - direct hex (4 bytes = 8 hex chars)
+            s << arr[5].GetString();
+
+            // Previous block hash - direct hex (32 bytes = 64 hex chars)
+            s << arr[1].GetString();
+
+            // Merkle tree root
+            std::string blob = arr[2].GetString();
+            blob += m_extraNonce.second;
+            blob.append(m_extraNonce2Size * 2, '0');
+            blob += arr[3].GetString();
+
+            uint8_t merkle_root[64];
+
+            Buffer buf = Cvt::fromHex(blob.c_str(), blob.length());
+
+            // Get height from coinbase
+            {
+                uint8_t* p = buf.data() + 32;
+                uint8_t* m = p + 128;
+
+                while ((p < m) && (*p != 0xff)) ++p;
+                while ((p < m) && (*p == 0xff)) ++p;
+
+                if ((p < m) && (*(p - 1) == 0xff) && (*(p - 2) == 0xff)) {
+                    uint32_t height = *reinterpret_cast<uint16_t*>(p + 2);
+                    switch (*(p + 1)) {
+                    case 4:
+                        height += *reinterpret_cast<uint16_t*>(p + 4) * 0x10000UL;
+                        break;
+                    case 3:
+                        height += *(p + 4) * 0x10000UL;
+                        break;
+                    }
+                    job.setHeight(height);
+                }
+                else {
+                    job.setHeight(0);
+                }
+            }
+
+            sha256d(merkle_root, buf.data(), buf.size());
+
+            auto merkle_branches = arr[4].GetArray();
+            for (int i = 0, n = merkle_branches.Size(); i < n; ++i) {
+                auto& b = merkle_branches[i];
+                buf = b.IsString() ? Cvt::fromHex(b.GetString(), b.GetStringLength()) : Buffer();
+                if (buf.size() != 32) {
+                    LOG_ERR("%s " RED("invalid mining.notify notification: param 4 is invalid"), tag());
+                    return;
+                }
+                memcpy(merkle_root + 32, buf.data(), 32);
+                sha256d(merkle_root, merkle_root, 64);
+            }
+
+            // Merkle root - direct hex
+            s << Cvt::toHex(merkle_root, 32);
+
+            // ntime - direct hex (4 bytes = 8 hex chars)
+            m_ntime = arr[7].GetString();
+            s << m_ntime;
+
+            // nbits - direct hex (4 bytes = 8 hex chars)
+            s << arr[6].GetString();
+
+            blob = s.str();
+
+            if (blob.size() != 76 * 2) {
+                LOG_ERR("%s " RED("invalid mining.notify notification: invalid blob size"), tag());
+                return;
+            }
+
+            // zeros up to 80 bytes (nonce placeholder)
+            blob.resize(80 * 2, '0');
+
+            // Byte ordering for Verthash (Bitcoin-style stratum):
+            // cpuminer-opt does: v128_bswap32_80(edata, pdata) - full 80-byte swap
+            // Then sets: edata[19] = n (nonce in NATIVE format AFTER the swap)
+            //
+            // IMPORTANT: Testing shows:
+            // - Full 80-byte swap + LE nonce submission: ~5% acceptance (best)
+            // - 76-byte swap (skip nonce bytes): 0% acceptance (worse)
+            // - No swap: 0% acceptance
+            // - BE nonce submission: 0% acceptance
+            //
+            // The ~5% acceptance rate suggests we're close but there's still
+            // an issue. The remaining problem is likely in the Verthash algorithm
+            // implementation or hash output byte ordering.
+            buf = Cvt::fromHex(blob.c_str(), blob.length());
+            // Full 80-byte swap (matching cpuminer-opt v128_bswap32_80)
+            for (size_t i = 0; i < 80; i += sizeof(uint32_t)) {
+                uint32_t& k = *reinterpret_cast<uint32_t*>(buf.data() + i);
+                k = ethash_swap_u32(k);
             }
             blob = Cvt::toHex(buf.data(), buf.size());
 
@@ -485,6 +623,7 @@ void xmrig::EthStratumClient::onAuthorizeResponse(const rapidjson::Value &result
     try {
         if (!success) {
             const auto message = errorMessage(result);
+            LOG_DEBUG("[%s] mining.authorize failed: success=%d, message=%s", url(), success, message ? message : "null");
             if (message) {
                 throw std::runtime_error(message);
             }

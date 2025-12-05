@@ -35,6 +35,9 @@
 #   include "crypto/rx/RxConfig.h"
 #endif
 
+#ifdef XMRIG_ALGO_VERTHASH
+#   include "crypto/verthash/VerthashConfig.h"
+#endif
 
 #ifdef XMRIG_FEATURE_OPENCL
 #   include "backend/opencl/OclConfig.h"
@@ -82,6 +85,10 @@ public:
 
 #   ifdef XMRIG_ALGO_RANDOMX
     RxConfig rx;
+#   endif
+
+#   ifdef XMRIG_ALGO_VERTHASH
+    VerthashConfig vh;
 #   endif
 
 #   ifdef XMRIG_FEATURE_OPENCL
@@ -168,6 +175,14 @@ const xmrig::RxConfig &xmrig::Config::rx() const
 #endif
 
 
+#ifdef XMRIG_ALGO_VERTHASH
+const xmrig::VerthashConfig &xmrig::Config::vh() const
+{
+    return d_ptr->vh;
+}
+#endif
+
+
 #if defined(XMRIG_FEATURE_NVML) || defined (XMRIG_FEATURE_ADL)
 uint32_t xmrig::Config::healthPrintTime() const
 {
@@ -223,6 +238,10 @@ bool xmrig::Config::read(const IJsonReader &reader, const char *fileName)
     }
 #   endif
 
+#   ifdef XMRIG_ALGO_VERTHASH
+    d_ptr->vh.read(reader.getValue(VerthashConfig::kField));
+#   endif
+
 #   ifdef XMRIG_FEATURE_OPENCL
     if (!pools().isBenchmark()) {
         d_ptr->cl.read(reader.getValue(kOcl));
@@ -268,6 +287,10 @@ void xmrig::Config::getJSON(rapidjson::Document &doc) const
 
 #   ifdef XMRIG_ALGO_RANDOMX
     doc.AddMember(StringRef(RxConfig::kField),          rx().toJSON(doc), allocator);
+#   endif
+
+#   ifdef XMRIG_ALGO_VERTHASH
+    doc.AddMember(StringRef(VerthashConfig::kField),    vh().toJSON(doc), allocator);
 #   endif
 
     doc.AddMember(StringRef(CpuConfig::kField),         cpu().toJSON(doc), allocator);

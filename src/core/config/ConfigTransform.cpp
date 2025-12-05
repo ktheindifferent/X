@@ -29,6 +29,9 @@
 #   include "crypto/rx/RxConfig.h"
 #endif
 
+#ifdef XMRIG_ALGO_VERTHASH
+#   include "crypto/verthash/VerthashConfig.h"
+#endif
 
 #ifdef XMRIG_FEATURE_BENCHMARK
 #   include "base/net/stratum/benchmark/BenchConfig.h"
@@ -249,6 +252,14 @@ void xmrig::ConfigTransform::transform(rapidjson::Document &doc, int key, const 
 #   ifdef XMRIG_FEATURE_DMI
     case IConfig::DmiKey: /* --no-dmi */
         return set(doc, Config::kDMI, false);
+#   endif
+
+#   ifdef XMRIG_ALGO_VERTHASH
+    case IConfig::VerthashDataKey: /* --verthash-data */
+        return set(doc, VerthashConfig::kField, VerthashConfig::kDataFile, arg);
+
+    case IConfig::VerthashGenDataKey: /* --gen-verthash-data */
+        return set(doc, VerthashConfig::kField, VerthashConfig::kGenDataFile, arg);
 #   endif
 
 #   ifdef XMRIG_FEATURE_BENCHMARK

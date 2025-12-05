@@ -66,6 +66,11 @@
 #   include "crypto/ghostrider/ghostrider.h"
 #endif
 
+#ifdef XMRIG_ALGO_VERTHASH
+#   include "crypto/verthash/Vh.h"
+#   include "crypto/verthash/VerthashConfig.h"
+#endif
+
 
 namespace xmrig {
 
@@ -92,6 +97,10 @@ public:
 
 #       ifdef XMRIG_ALGO_RANDOMX
         Rx::destroy();
+#       endif
+
+#       ifdef XMRIG_ALGO_VERTHASH
+        Vh::destroy();
 #       endif
     }
 
@@ -405,6 +414,10 @@ xmrig::Miner::Miner(Controller *controller)
 
 #   ifdef XMRIG_ALGO_RANDOMX
     Rx::init(this);
+#   endif
+
+#   ifdef XMRIG_ALGO_VERTHASH
+    Vh::init(controller->config()->vh());
 #   endif
 
     controller->addListener(this);

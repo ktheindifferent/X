@@ -379,6 +379,13 @@ xmrig::CpuThreads xmrig::BasicCpuInfo::threads(const Algorithm &algorithm, uint3
     }
 #   endif
 
+#   ifdef XMRIG_ALGO_VERTHASH
+    if (f == Algorithm::VERTHASH) {
+        // Verthash benefits from more threads but doesn't need high intensity
+        return CpuThreads(count, 1);
+    }
+#   endif
+
     return CpuThreads(std::max<size_t>(count / 2, 1), 1);
 }
 

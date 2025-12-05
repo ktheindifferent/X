@@ -89,6 +89,10 @@ public:
         RotationKey          = 1058,
         DaemonJobTimeoutKey  = 1059,
 
+        // Verthash
+        VerthashDataKey      = 1060,
+        VerthashGenDataKey   = 1061,
+
         // xmrig common
         CPUPriorityKey       = 1021,
         NicehashKey          = 1006,

@@ -161,6 +161,11 @@ size_t xmrig::Job::nonceOffset() const
     case Algorithm::GHOSTRIDER:
         return 76;
 
+#   ifdef XMRIG_ALGO_VERTHASH
+    case Algorithm::VERTHASH:
+        return 76;  // Bitcoin-style block header: nonce is at bytes 76-79
+#   endif
+
     default:
         break;
     }

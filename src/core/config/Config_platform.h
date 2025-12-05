@@ -162,6 +162,10 @@ static const option options[] = {
 #   ifdef XMRIG_FEATURE_DMI
     { "no-dmi",                0, nullptr, IConfig::DmiKey                },
 #   endif
+#   ifdef XMRIG_ALGO_VERTHASH
+    { "verthash-data",         1, nullptr, IConfig::VerthashDataKey       },
+    { "gen-verthash-data",     1, nullptr, IConfig::VerthashGenDataKey    },
+#   endif
     { nullptr,                 0, nullptr, 0 }
 };
 

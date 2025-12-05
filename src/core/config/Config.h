@@ -37,6 +37,7 @@ class CudaConfig;
 class IThread;
 class OclConfig;
 class RxConfig;
+class VerthashConfig;
 
 
 class Config : public BaseConfig
@@ -82,6 +83,10 @@ public:
 
 #   ifdef XMRIG_ALGO_RANDOMX
     const RxConfig &rx() const;
+#   endif
+
+#   ifdef XMRIG_ALGO_VERTHASH
+    const VerthashConfig &vh() const;
 #   endif
 
 #   if defined(XMRIG_FEATURE_NVML) || defined (XMRIG_FEATURE_ADL)

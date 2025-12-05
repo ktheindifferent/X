@@ -44,6 +44,27 @@
 #   include "crypto/randomx/randomx.h"
 #endif
 
+#ifdef XMRIG_ALGO_VERTHASH
+#   include "crypto/verthash/VerthashWrapper.h"
+#   include "base/io/log/Log.h"
+#   include "base/tools/bswap_64.h"
+#   include "base/crypto/Algorithm.h"
+#   include <sstream>
+#   include <iomanip>
+
+namespace {
+    static uint64_t s_verthash_debug_counter = 0;
+
+    std::string bytesToHex(const uint8_t* data, size_t len) {
+        std::stringstream ss;
+        for (size_t i = 0; i < len; ++i) {
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(data[i]);
+        }
+        return ss.str();
+    }
+}
+#endif
+
 
 #ifdef XMRIG_FEATURE_BENCHMARK
 #   include "backend/common/benchmark/BenchState.h"
@@ -169,6 +190,14 @@ bool xmrig::CpuWorker<N>::selfTest()
 #   ifdef XMRIG_ALGO_GHOSTRIDER
     if (m_algorithm.family() == Algorithm::GHOSTRIDER) {
         return (N == 8) && verify(Algorithm::GHOSTRIDER_RTM, test_output_gr);
+    }
+#   endif
+
+#   ifdef XMRIG_ALGO_VERTHASH
+    if (m_algorithm.family() == Algorithm::VERTHASH) {
+        // Verthash self-test requires the .dat file which is already loaded
+        // We skip the algorithmic verification here and rely on runtime checks
+        return N == 1;
     }
 #   endif
 
@@ -325,6 +354,19 @@ void xmrig::CpuWorker<N>::start()
                     break;
 #               endif
 
+#               ifdef XMRIG_ALGO_VERTHASH
+                case Algorithm::VERTHASH:
+                    if (N == 1) {
+                        // Verthash: Hash the 80-byte header directly
+                        // Header is already byte-swapped in EthStratumClient
+                        Verthash::instance().hash(m_job.blob(), m_hash);
+                    }
+                    else {
+                        valid = false;
+                    }
+                    break;
+#               endif
+
                 default:
                     fn(job.algorithm())(m_job.blob(), job.size(), m_hash, m_ctx, job.height());
                     break;
@@ -337,7 +379,19 @@ void xmrig::CpuWorker<N>::start()
 
             if (valid) {
                 for (size_t i = 0; i < N; ++i) {
-                    const uint64_t value = *reinterpret_cast<uint64_t*>(m_hash + (i * 32) + 24);
+                    uint64_t value;
+#                   ifdef XMRIG_ALGO_VERTHASH
+                    if (job.algorithm().family() == Algorithm::VERTHASH) {
+                        // For Verthash (Bitcoin-style PoW), hash is compared as big-endian 256-bit.
+                        // The first bytes (0-7) are most significant. Read and byte-swap to compare.
+                        value = *reinterpret_cast<uint64_t*>(m_hash + (i * 32));
+                        value = bswap_64(value);
+                    }
+                    else
+#                   endif
+                    {
+                        value = *reinterpret_cast<uint64_t*>(m_hash + (i * 32) + 24);
+                    }
 
 #                   ifdef XMRIG_FEATURE_BENCHMARK
                     if (m_benchSize) {

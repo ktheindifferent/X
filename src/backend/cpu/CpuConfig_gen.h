@@ -151,6 +151,15 @@ size_t inline generate<Algorithm::GHOSTRIDER>(Threads<CpuThreads>& threads, uint
 #endif
 
 
+#ifdef XMRIG_ALGO_VERTHASH
+template<>
+size_t inline generate<Algorithm::VERTHASH>(Threads<CpuThreads>& threads, uint32_t limit)
+{
+    return generate(Algorithm::kVERTHASH, threads, Algorithm::VERTHASH_VTC, limit);
+}
+#endif
+
+
 } /* namespace xmrig */
 
 

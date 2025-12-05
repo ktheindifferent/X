@@ -101,6 +101,11 @@ const char* Algorithm::kGHOSTRIDER      = "ghostrider";
 const char* Algorithm::kGHOSTRIDER_RTM  = "ghostrider";
 #endif
 
+#ifdef XMRIG_ALGO_VERTHASH
+const char *Algorithm::kVERTHASH        = "verthash";
+const char *Algorithm::kVERTHASH_VTC    = "verthash";
+#endif
+
 
 #define ALGO_NAME(ALGO)         { Algorithm::ALGO, Algorithm::k##ALGO }
 #define ALGO_ALIAS(ALGO, NAME)  { NAME, Algorithm::ALGO }
@@ -162,6 +167,10 @@ static const std::map<uint32_t, const char *> kAlgorithmNames = {
 
 #   ifdef XMRIG_ALGO_GHOSTRIDER
     ALGO_NAME(GHOSTRIDER_RTM),
+#   endif
+
+#   ifdef XMRIG_ALGO_VERTHASH
+    ALGO_NAME(VERTHASH_VTC),
 #   endif
 };
 
@@ -279,6 +288,11 @@ static const std::map<const char *, Algorithm::Id, aliasCompare> kAlgorithmAlias
     ALGO_ALIAS_AUTO(GHOSTRIDER_RTM), ALGO_ALIAS(GHOSTRIDER_RTM, "ghostrider/rtm"),
                                      ALGO_ALIAS(GHOSTRIDER_RTM, "gr"),
 #   endif
+
+#   ifdef XMRIG_ALGO_VERTHASH
+    ALGO_ALIAS_AUTO(VERTHASH_VTC),   ALGO_ALIAS(VERTHASH_VTC, "verthash/vtc"),
+                                     ALGO_ALIAS(VERTHASH_VTC, "vh"),
+#   endif
 };
 
 
@@ -353,7 +367,8 @@ std::vector<xmrig::Algorithm> xmrig::Algorithm::all(const std::function<bool(con
         RX_0, RX_WOW, RX_ARQ, RX_GRAFT, RX_SFX, RX_YADA,
         AR2_CHUKWA, AR2_CHUKWA_V2, AR2_WRKZ,
         KAWPOW_RVN,
-        GHOSTRIDER_RTM
+        GHOSTRIDER_RTM,
+        VERTHASH_VTC
     };
 
     Algorithms out;

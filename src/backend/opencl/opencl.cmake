@@ -130,6 +130,16 @@ if (WITH_OPENCL)
              )
     endif()
 
+    if (WITH_VERTHASH)
+        list(APPEND HEADERS_BACKEND_OPENCL
+             src/backend/opencl/runners/OclVerthashRunner.h
+             )
+
+        list(APPEND SOURCES_BACKEND_OPENCL
+             src/backend/opencl/runners/OclVerthashRunner.cpp
+             )
+    endif()
+
     if (WITH_STRICT_CACHE)
         add_definitions(/DXMRIG_STRICT_OPENCL_CACHE)
     else()

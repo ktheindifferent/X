@@ -12,3 +12,5 @@ scripts/deps
 
 # Session summaries (generated documentation)
 SESSION_SUMMARY*.md
+verthash.dat
+miner.pid
