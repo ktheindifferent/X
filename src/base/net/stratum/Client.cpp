@@ -311,6 +311,12 @@ void xmrig::Client::onResolved(const DnsRecords &records, int status, const char
 {
     m_dns.reset();
 
+    // If disconnect() was called during DNS resolution, don't connect.
+    // disconnect() sets m_failures = -1 to indicate explicit disconnection.
+    if (m_failures == -1) {
+        return;
+    }
+
     assert(m_listener != nullptr);
     if (!m_listener) {
         return reconnect();
@@ -518,7 +524,9 @@ int xmrig::Client::resolve(const String &host)
 
     m_reader.reset();
 
-    if (m_failures == -1) {
+    // Don't reset m_failures if explicitly disconnected (m_failures == -1).
+    // This preserves the disconnected state so onResolved() can detect it.
+    if (m_failures > 0) {
         m_failures = 0;
     }
 
@@ -924,6 +932,14 @@ void xmrig::Client::reconnect()
 
     if (m_failures == -1) {
         return m_listener->onClose(this, -1);
+    }
+
+    // When m_retries is 0, don't set up auto-reconnect - let the strategy handle failover.
+    // This is used by FailoverStrategy to immediately failover to the next pool on first error.
+    if (m_retries == 0) {
+        m_failures++;
+        m_listener->onClose(this, static_cast<int>(m_failures));
+        return;
     }
 
     setState(ReconnectingState);

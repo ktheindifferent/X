@@ -69,6 +69,8 @@ protected:
 private:
     inline IClient *active() const { return m_pools[static_cast<size_t>(m_active)]; }
 
+    void connectNext();
+
     const bool m_quiet;
     const int m_retries;
     const int m_retryPause;
@@ -76,6 +78,9 @@ private:
     IStrategyListener *m_listener;
     size_t m_index          = 0;
     std::vector<IClient*> m_pools;
+    size_t m_pendingIndex   = 0;
+    bool m_pendingConnect   = false;
+    size_t m_minAcceptableIndex = 0;  // Minimum pool index we'll accept during failover (retries=0 mode)
 };
 
 

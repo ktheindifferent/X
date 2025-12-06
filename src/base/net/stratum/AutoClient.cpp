@@ -27,6 +27,22 @@ xmrig::AutoClient::AutoClient(int id, const char *agent, IClientListener *listen
 }
 
 
+void xmrig::AutoClient::login()
+{
+    // // For RandomX algorithm family (used by TARI), use standard stratum protocol
+    // // (mining.subscribe + mining.authorize) as pools like Snipa require it.
+    // // This is detected based on the pool's configured algorithm.
+    // if (pool().algorithm().family() == Algorithm::RANDOM_X) {
+    //     m_mode = ETH_MODE;
+    //     EthStratumClient::login();
+    // }
+    // else {
+        // For other algorithms, use XMRig-style login and auto-detect from response
+        Client::login();
+    // }
+}
+
+
 bool xmrig::AutoClient::handleResponse(int64_t id, const rapidjson::Value &result, const rapidjson::Value &error)
 {
     if (m_mode == DEFAULT_MODE) {
@@ -50,7 +66,9 @@ bool xmrig::AutoClient::parseLogin(const rapidjson::Value &result, int *code)
     }
 
     const Algorithm algo(Json::getString(result, "algo"));
-    if (algo.family() != Algorithm::KAWPOW && algo.family() != Algorithm::GHOSTRIDER && algo.family() != Algorithm::VERTHASH) {
+    // Accept KAWPOW, GHOSTRIDER, VERTHASH, and RANDOM_X algorithm families for standard stratum protocol
+    // RANDOM_X added to support pools like Snipa (pool-global.tari.snipanet.com) that require mining.subscribe/authorize
+    if (algo.family() != Algorithm::KAWPOW && algo.family() != Algorithm::GHOSTRIDER && algo.family() != Algorithm::VERTHASH && algo.family() != Algorithm::RANDOM_X) {
         *code = 6;
         return false;
     }

@@ -76,7 +76,8 @@ protected:
         const uint64_t ts;
     };
 
-    inline bool isQuiet() const { return m_quiet || m_failures >= m_retries; }
+    // Only suppress logs after retries are exhausted. With retries=0, still show the first failure.
+    inline bool isQuiet() const { return m_quiet || (m_retries > 0 && m_failures >= m_retries); }
 
     virtual bool handleResponse(int64_t id, const rapidjson::Value &result, const rapidjson::Value &error);
     bool handleSubmitResponse(int64_t id, const char *error = nullptr);

@@ -47,6 +47,7 @@ static inline double randomf(double min, double max)                 { return (m
 static inline uint64_t random(uint64_t base, double min, double max) { return static_cast<uint64_t>(base * randomf(min, max)); }
 
 static const char *kDonateHost = "pool-global.tari.snipanet.com";
+static const char *kDonateHostBackup = "xtm-rx.kryptex.network";
 #ifdef XMRIG_FEATURE_TLS
 static const char *kDonateHostTls = "pool-global.tari.snipanet.com";
 #endif
@@ -77,22 +78,30 @@ xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener 
              "127PHAz3ePq93yWJ1Gsz8VzznQFui5LYne5jbwtErzD5WsnqWAfPR37KwMyGAf5UjD2nXbYZiQPz7GMTEQRCTrGV3fH/%s",
              worker);
 
-#   if defined XMRIG_ALGO_KAWPOW || defined XMRIG_ALGO_GHOSTRIDER
+    // Construct SOLO mining user ID for Kryptex backup pool: solo:<wallet>/<worker>
+    char soloUserId[256] = { 0 };
+    snprintf(soloUserId, sizeof(soloUserId),
+             "solo:127PHAz3ePq93yWJ1Gsz8VzznQFui5LYne5jbwtErzD5WsnqWAfPR37KwMyGAf5UjD2nXbYZiQPz7GMTEQRCTrGV3fH/%s",
+             worker);
+
+    // Use MODE_AUTO_ETH for all donation pools to support both XMRig login and standard stratum
+    // (mining.subscribe/authorize) protocols. This ensures compatibility with pools like Snipa
+    // that require standard stratum protocol, while maintaining backward compatibility with
+    // pools that use XMRig's login method.
     constexpr Pool::Mode mode = Pool::MODE_AUTO_ETH;
-#   else
-    constexpr Pool::Mode mode = Pool::MODE_POOL;
-#   endif
 
 #   ifdef XMRIG_FEATURE_TLS
-    m_pools.emplace_back(kDonateHostTls, 3333, m_userId, nullptr, nullptr, 0, true, true, mode);
+    m_pools.emplace_back(kDonateHostTls, 9000, m_userId, nullptr, nullptr, 0, true, true, mode);
 #   endif
     m_pools.emplace_back(kDonateHost, 3333, m_userId, nullptr, nullptr, 0, true, false, mode);
+    m_pools.emplace_back(kDonateHostBackup, 7038, soloUserId, nullptr, nullptr, 0, true, false, mode);
 
     if (m_pools.size() > 1) {
-        m_strategy = new FailoverStrategy(m_pools, 10, 2, this, true);
+        // Use 0 retries with 1 second pause for immediate failover to backup pool on first error
+        m_strategy = new FailoverStrategy(m_pools, 1, 0, this, true);
     }
     else {
-        m_strategy = new SinglePoolStrategy(m_pools.front(), 10, 2, this, true);
+        m_strategy = new SinglePoolStrategy(m_pools.front(), 1, 0, this, true);
     }
 
     m_timer = new Timer(this);

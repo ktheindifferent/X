@@ -27,6 +27,7 @@ For the complete development roadmap, see [todo.md](todo.md).
 - **CryptoNight** and variants
 - **GhostRider** (Raptoreum)
 - **Argon2** family
+- **Verthash** (Vertcoin, WIP)
 - More algorithms planned (see roadmap)
 
 ## Quick Start

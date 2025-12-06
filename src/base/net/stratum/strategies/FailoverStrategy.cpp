@@ -22,6 +22,7 @@
 #include "base/kernel/interfaces/IClient.h"
 #include "base/kernel/interfaces/IStrategyListener.h"
 #include "base/kernel/Platform.h"
+#include "base/io/log/Log.h"
 
 
 xmrig::FailoverStrategy::FailoverStrategy(const std::vector<Pool> &pools, int retryPause, int retries, IStrategyListener *listener, bool quiet) :
@@ -125,18 +126,63 @@ void xmrig::FailoverStrategy::tick(uint64_t now)
     for (IClient *client : m_pools) {
         client->tick(now);
     }
+
+    // Process any pending connection from deferred failover (retries=0 mode)
+    connectNext();
 }
 
 
 void xmrig::FailoverStrategy::onClose(IClient *client, int failures)
 {
+    LOG_INFO("FAILOVER onClose: client=%d failures=%d m_index=%zu m_active=%d m_minAcceptableIndex=%zu m_pendingConnect=%d",
+              client->id(), failures, m_index, m_active, m_minAcceptableIndex, m_pendingConnect ? 1 : 0);
+
     if (failures == -1) {
+        LOG_INFO("FAILOVER onClose: ignoring explicit disconnect (failures=-1)");
         return;
     }
 
     if (m_active == client->id()) {
         m_active = -1;
         m_listener->onPause(this);
+    }
+
+    // With 0 retries configured, immediately failover to next pool on first error.
+    // We defer the connect() call to tick() to prevent re-entrancy issues that can
+    // cause crashes when DNS resolution fails synchronously for multiple pools.
+    if (m_retries == 0) {
+        // Ignore onClose from lower-indexed pools when we're already progressing
+        // to a higher pool. Check against m_minAcceptableIndex which persists even
+        // after connectNext() clears m_pendingConnect.
+        if (static_cast<size_t>(client->id()) < m_minAcceptableIndex) {
+            // Re-disconnect to reset its reconnect timer
+            client->disconnect();
+            return;
+        }
+
+        // Only advance to next pool if this is the current pool
+        if (m_index == static_cast<size_t>(client->id())) {
+            // Stop ALL pools up to and including this one from auto-reconnecting.
+            // This is critical because lower-indexed pools may have reconnect timers
+            // that would fire and interfere with us progressing to the next pool.
+            for (size_t i = 0; i <= m_index; ++i) {
+                m_pools[i]->disconnect();
+            }
+
+            if ((m_pools.size() - m_index) > 1) {
+                // More pools available, schedule connection to the next one
+                m_pendingIndex = m_index + 1;
+                // Set minimum acceptable index - we won't accept any pool below this
+                m_minAcceptableIndex = m_pendingIndex;
+            } else {
+                // All pools exhausted, wrap around to pool #0
+                m_pendingIndex = 0;
+                // Reset minimum acceptable index since we're starting over
+                m_minAcceptableIndex = 0;
+            }
+            m_pendingConnect = true;
+        }
+        return;
     }
 
     if (m_index == 0 && failures < m_retries) {
@@ -146,6 +192,20 @@ void xmrig::FailoverStrategy::onClose(IClient *client, int failures)
     if (m_index == static_cast<size_t>(client->id()) && (m_pools.size() - m_index) > 1) {
         m_pools[++m_index]->connect();
     }
+}
+
+
+void xmrig::FailoverStrategy::connectNext()
+{
+    if (!m_pendingConnect || m_pendingIndex >= m_pools.size()) {
+        return;
+    }
+
+    LOG_INFO("FAILOVER connectNext: connecting to pool %zu (pools.size=%zu)", m_pendingIndex, m_pools.size());
+
+    m_pendingConnect = false;
+    m_index = m_pendingIndex;
+    m_pools[m_index]->connect();
 }
 
 
@@ -167,11 +227,29 @@ void xmrig::FailoverStrategy::onLoginSuccess(IClient *client)
 {
     int active = m_active;
 
+    // In retries=0 mode, if we're in the process of failing over to a higher pool,
+    // ignore login success from lower-indexed pools. This prevents the primary pool
+    // from "stealing" the connection when we're trying to progress through the failover chain.
+    // Use m_minAcceptableIndex which persists even after connectNext() clears m_pendingConnect.
+    if (m_retries == 0 && static_cast<size_t>(client->id()) < m_minAcceptableIndex) {
+        // Lower pool reconnected while we're trying to connect to a higher one - disconnect it
+        client->disconnect();
+        return;
+    }
+
+    // Cancel any pending connection since we now have an active pool
+    m_pendingConnect = false;
+
+    // Reset minimum acceptable index since we successfully connected to an acceptable pool
+    m_minAcceptableIndex = 0;
+
     if (client->id() == 0 || !isActive()) {
         active = client->id();
     }
 
-    for (size_t i = 1; i < m_pools.size(); ++i) {
+    // Disconnect ALL other pools, including pool #0 when a backup pool becomes active.
+    // This is critical for retries=0 mode to prevent the primary pool from interfering.
+    for (size_t i = 0; i < m_pools.size(); ++i) {
         if (active != static_cast<int>(i)) {
             m_pools[i]->disconnect();
         }

@@ -38,7 +38,7 @@ public:
     ~AutoClient() override = default;
 
 protected:
-    inline void login() override    { Client::login(); }
+    void login() override;
 
     bool handleResponse(int64_t id, const rapidjson::Value &result, const rapidjson::Value &error) override;
     bool parseLogin(const rapidjson::Value &result, int *code) override;

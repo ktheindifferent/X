@@ -417,7 +417,19 @@ xmrig::Miner::Miner(Controller *controller)
 #   endif
 
 #   ifdef XMRIG_ALGO_VERTHASH
-    Vh::init(controller->config()->vh());
+    // Only load Verthash data file if a pool actually uses the VERTHASH algorithm
+    {
+        bool needsVerthash = false;
+        for (const auto &pool : controller->config()->pools().data()) {
+            if (pool.algorithm().family() == Algorithm::VERTHASH) {
+                needsVerthash = true;
+                break;
+            }
+        }
+        if (needsVerthash) {
+            Vh::init(controller->config()->vh());
+        }
+    }
 #   endif
 
     controller->addListener(this);

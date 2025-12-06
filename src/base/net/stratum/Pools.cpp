@@ -239,7 +239,7 @@ void xmrig::Pools::setProxyDonate(int value)
 
 void xmrig::Pools::setRetries(int retries)
 {
-    if (retries > 0 && retries <= 1000) {
+    if (retries >= 0 && retries <= 1000) {
         m_retries = retries;
     }
 }

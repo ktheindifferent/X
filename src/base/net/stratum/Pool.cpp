@@ -34,6 +34,8 @@
 #if defined XMRIG_ALGO_KAWPOW || defined XMRIG_ALGO_GHOSTRIDER || defined XMRIG_ALGO_VERTHASH
 #   include "base/net/stratum/AutoClient.h"
 #   include "base/net/stratum/EthStratumClient.h"
+#elif defined XMRIG_ALGO_RANDOMX
+#   include "base/net/stratum/AutoClient.h"
 #endif
 
 
@@ -230,6 +232,15 @@ xmrig::IClient *xmrig::Pool::createClient(int id, IClientListener *listener) con
         const uint32_t f = m_algorithm.family();
         if ((f == Algorithm::KAWPOW) || (f == Algorithm::GHOSTRIDER) || (f == Algorithm::VERTHASH) || (m_coin == Coin::RAVEN)) {
             client = new EthStratumClient(id, Platform::userAgent(), listener);
+        }
+        else
+#       endif
+#       ifdef XMRIG_ALGO_RANDOMX
+        // For RandomX algorithm family (used by TARI), use AutoClient to support both
+        // XMRig-style login AND standard stratum protocol (mining.subscribe/authorize).
+        // Pools like Snipa require standard stratum, while others use XMRig login.
+        if (m_algorithm.family() == Algorithm::RANDOM_X) {
+            client = new AutoClient(id, Platform::userAgent(), listener);
         }
         else
 #       endif
